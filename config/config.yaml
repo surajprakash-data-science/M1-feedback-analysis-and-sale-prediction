@@ -1,0 +1,22 @@
+paths:
+  raw_data: "data/m1_data.csv"
+  updated_data: "data/m1_data_updated.csv"
+  model_path: "models/model_v1.pkl"
+  report_output: "result/classification_report.txt"
+  plot_output: "result/confusion_matrix.png"
+
+factor_analysis_params:
+  n_components: 3
+  random_state: 42
+
+dataset:
+  binary_cols: ['trust_apple', 'user_pcmac', 'familiarity_m1', 'gender']
+  category_cols: ['status', 'domain']
+  target_col: ["m1_purchase"]
+  cols_to_drop: ['m1_purchase', 'm1_consideration']
+  feature_cols: ["interest_computers","f_performanceloss", "f_synergy", "f_neural", "f_performance","f_noise"
+                , "f_multitasking", "f_size", "f_price", "f_batterylife"]
+  numerical_cols: ["f_performanceloss", "f_synergy", "f_neural", "f_performance",
+              "f_noise", "f_multitasking", "f_size", "f_price", "f_batterylife","interest_computers",
+              "age_group", "income_group", "status", "domain", "appleproducts_count" , "age_computer"]
+  categorical_cols: ['trust_apple', 'user_pcmac', 'familiarity_m1','gender']

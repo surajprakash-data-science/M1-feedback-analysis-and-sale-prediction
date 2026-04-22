@@ -1,0 +1,13 @@
+# Environments
+venv/
+.env
+M1/
+# Data and Models
+data/
+models/*.pkl
+models/*.h5
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/

@@ -1,0 +1,10 @@
+Classification Report for M1 Purchase Prediction
+==================================================
+               precision    recall  f1-score   support
+
+Not Purchased       0.64      0.88      0.74         8
+    Purchased       0.93      0.76      0.84        17
+
+     accuracy                           0.80        25
+    macro avg       0.78      0.82      0.79        25
+ weighted avg       0.84      0.80      0.81        25
