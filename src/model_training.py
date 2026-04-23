@@ -13,8 +13,8 @@ class ModelTrainer:
 
     def train_model(self, df):
         logging.info("Training model...")
-
-        x = df.drop(columns=self.config['dataset']['cols_to_drop'])
+        cols_to_drop = self.config['dataset']['cols_to_drop']
+        x = df.drop(columns=[c for c in cols_to_drop if c in df.columns])
         y = df[self.config['dataset']['target_col']]
         x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
         # Calculate class weights

@@ -1,9 +1,13 @@
 paths:
   raw_data: "data/m1_data.csv"
   updated_data: "data/m1_data_updated.csv"
+  encoder_path: "models/encoder.pkl"
   model_path: "models/model_v1.pkl"
+  factor_analysis_model_path: "models/factor_analysis_model.pkl"
   report_output: "result/classification_report.txt"
   plot_output: "result/confusion_matrix.png"
+  selected_features_output: "result/selected_features.txt"
+
 
 factor_analysis_params:
   n_components: 3

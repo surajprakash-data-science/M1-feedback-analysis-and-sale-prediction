@@ -4,8 +4,7 @@ venv/
 M1/
 # Data and Models
 data/
-models/*.pkl
-models/*.h5
+models/
 
 # Python
 __pycache__/

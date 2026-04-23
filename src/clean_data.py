@@ -1,11 +1,10 @@
 import pandas as pd
 import logging
-from category_encoders import OneHotEncoder, OrdinalEncoder
-from sklearn.compose import ColumnTransformer
 from sklearn.decomposition import FactorAnalysis
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.feature_selection import RFE, SelectKBest, VarianceThreshold, chi2, f_classif
 from sklearn.linear_model import LogisticRegression
+from sklearn.preprocessing import LabelEncoder
 
 logger = logging.getLogger("M1_Feedback_Analysis_and_Sales_Prediction")
 
@@ -17,30 +16,30 @@ class DataPreprocessor:
         logger.info("Cleaning data...")
         df = df.drop_duplicates()
         df = df.dropna()
+        logger.info("Data cleaned successfully.")
+        return df
+    
+    def encoding_data(self, df):
+        logger.info("Encoding binary columns")
         df['m1_purchase'] = df['m1_purchase'].apply(lambda x: 1 if x== "Yes" else 0)
         df['trust_apple'] = df['trust_apple'].apply(lambda x: 1 if x== "Yes" else 0)
         df['user_pcmac'] = df['user_pcmac'].apply(lambda x: 1 if x== "Apple" else 0)
         df['familiarity_m1'] = df['familiarity_m1'].apply(lambda x: 1 if x== "Yes" else 0)
         df['gender'] = df['gender'].apply(lambda x: 1 if x== "Male" else 0)
-        logger.info("Data cleaned successfully.")
-        return df
-    
-    def encoding_data(self, df):
-        logger.info("Encoding data...")
-        
-        encoder = ColumnTransformer(
-            transformers = [
-                ('binary', OrdinalEncoder(), self.config['dataset']['binary_cols']),
-                ('category', OrdinalEncoder(), self.config['dataset']['category_cols'])
-            ],
-            remainder = 'passthrough',
-            verbose_feature_names_out=False
-        )
 
-        encoder.set_output(transform="pandas")
-        encoded_df = encoder.fit_transform(df)
+        logger.info("Encoding data with LabelEncoder...")
+        encoders_dict = {}
+        encoded_df = df.copy()
+
+        cols_to_encode = self.config['dataset']['category_cols']
+        for col in cols_to_encode:
+            le = LabelEncoder()
+            encoded_df[col] = le.fit_transform(df[col].astype(str)) # Ensure string type to avoid errors
+            encoders_dict[col] = le
+            
         logger.info("Data encoded successfully.")
-        return encoded_df
+        # Returning the df and the dict of encoders
+        return encoded_df, encoders_dict
         
     def feature_selection(self, df):
         logger.info("Performing feature selection...")
@@ -82,7 +81,7 @@ class DataPreprocessor:
         
         logger.info("Feature selection completed successfully.")
 
-        return df_final
+        return df_final, df[selected_cols]
 
     def factor_analysis(self, df):
         logger.info("Performing factor analysis...")
@@ -92,7 +91,7 @@ class DataPreprocessor:
         fa = FactorAnalysis(n_components=n_comp,
                             random_state=self.config['factor_analysis_params']['random_state'])
         
-        factors = fa.fit_transform(df[fa_cols])
+        factors = fa.fit_transform(df[fa_cols].values)
 
         factor_df = pd.DataFrame(
             factors, 
@@ -104,4 +103,4 @@ class DataPreprocessor:
         df_final = pd.concat([df_dropped, factor_df], axis=1)
 
         logger.info("Factor analysis completed successfully.")
-        return df_final
+        return df_final, fa
