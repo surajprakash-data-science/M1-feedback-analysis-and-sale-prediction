@@ -12,10 +12,10 @@ with open("config/config.yaml", "r") as f:
 def load_models():
     model = joblib.load(config['paths']['model_path'])
     fa_model = joblib.load(config['paths']['factor_analysis_model_path'])
-    encoder = joblib.load(config['paths']['encoder_path'])
-    return model, fa_model, encoder
+    encoders = joblib.load(config['paths']['encoder_path'])
+    return model, fa_model, encoders
 
-model, fa_model, fitted_encoder = load_models()
+model, fa_model, encoders = load_models()
 
 # --- 2. Streamlit UI Layout ---
 st.title("🍎 M1 Mac Purchase Predictor")
@@ -58,6 +58,11 @@ with st.form("prediction_form"):
 # --- 3. Prediction Logic ---
 if submit:
     try:
+        if os.path.exists(config['paths']['selected_features_output']):
+            with open(config['paths']['selected_features_output'], "r") as f:
+                SELECTED_FEATURES = [line.strip() for line in f]
+        else:
+            SELECTED_FEATURES = model.feature_names_in_.tolist()
         # Create DataFrame
         input_data = {
             "trust_apple": trust_apple, "interest_computers": interest_computers,
@@ -82,18 +87,25 @@ if submit:
         df['familiarity_m1'] = df['familiarity_m1'].apply(lambda x: 1 if x == "Yes" else 0)
         df['gender'] = df['gender'].apply(lambda x: 1 if x == "Male" else 0)
 
-        # Transform
-        encoded_df = fitted_encoder.transform(df)
+        # Encoding
+        for col, le in encoders.items():
+            if col in df.columns:
+                df[col] = df[col].fillna("Unknown").astype(str)
+                try:
+                    df[col] = le.transform(df[col])
+                except ValueError:
+                    df[col] = 0 
         fa_cols = config['dataset']['feature_cols']
-        factors = fa_model.transform(encoded_df[fa_cols])
-        
+        fa_cols = [col for col in fa_cols if col in SELECTED_FEATURES]
+        factors = fa_model.transform(df[fa_cols])
+        # Transform
         factor_df = pd.DataFrame(
             factors, 
             columns=[f'factor_{i+1}' for i in range(fa_model.n_components)], 
-            index=encoded_df.index
+            index=df.index
         )
 
-        df_dropped = encoded_df.drop(columns=fa_cols)
+        df_dropped = df.drop(columns=fa_cols)
         df_final = pd.concat([df_dropped, factor_df], axis=1)
         df_final = df_final[model.feature_names_in_]
 
